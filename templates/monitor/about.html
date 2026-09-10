@@ -1,0 +1,156 @@
+{% extends 'base.html' %}
+{% block title %}About AeroWatch Intelligence Platform{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+        <h2 class="fw-bold text-gradient mb-1">
+            <i class="fas fa-info-circle text-primary me-2"></i>About AeroWatch Platform Architecture
+        </h2>
+        <p class="text-secondary small mb-0">Production-grade Weather & Air Quality Environmental Intelligence, Telemetry Ingestion, and Statistical Analytics System.</p>
+    </div>
+</div>
+
+<!-- Architecture & System Overview -->
+<div class="row g-4 mb-4">
+    <div class="col-lg-8">
+        <div class="glass-card p-4 h-100">
+            <h5 class="fw-bold text-light mb-3">
+                <i class="fas fa-cogs text-primary me-2"></i>System Architecture & Data Pipelines
+            </h5>
+            <p class="text-secondary">
+                <strong>AeroWatch</strong> is an enterprise-caliber environmental monitoring platform engineered with Python and Django. It integrates dual live external environmental APIs (OpenWeatherMap and World Air Quality Index - WAQI) alongside a physics-based diurnal simulation engine that generates realistic atmospheric telemetry when API keys are unconfigured or rate-limited.
+            </p>
+            <div class="row g-3 my-2">
+                <div class="col-sm-6">
+                    <div class="glass-panel p-3 rounded-3">
+                        <h6 class="fw-bold text-info mb-1"><i class="fas fa-microchip me-1"></i> Data Ingestion Engine</h6>
+                        <p class="small text-secondary mb-0">Dual-provider fallback pipeline with rate-limiting tolerance, automatic coordinate geocoding, and synchronous model persistence.</p>
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="glass-panel p-3 rounded-3">
+                        <h6 class="fw-bold text-warning mb-1"><i class="fas fa-chart-line me-1"></i> Analytics & EDA Engine</h6>
+                        <p class="small text-secondary mb-0">Pandas and NumPy statistical vector calculations providing Pearson correlation heatmaps, ranking distributions, and automated insights.</p>
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="glass-panel p-3 rounded-3">
+                        <h6 class="fw-bold text-danger mb-1"><i class="fas fa-bell me-1"></i> Early Warning Watchdog</h6>
+                        <p class="small text-secondary mb-0">Autonomous threshold detection for particulate spikes (PM2.5 > 150), severe weather, and ground-level ozone concentrations.</p>
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="glass-panel p-3 rounded-3">
+                        <h6 class="fw-bold text-success mb-1"><i class="fas fa-network-wired me-1"></i> Django REST Framework</h6>
+                        <p class="small text-secondary mb-0">Complete suite of RESTful API endpoints powering headless frontend integration and programmatic telemetry access.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tech Stack Column -->
+    <div class="col-lg-4">
+        <div class="glass-card p-4 h-100">
+            <h5 class="fw-bold text-light mb-3">
+                <i class="fas fa-layer-group text-info me-2"></i>Technology Stack
+            </h5>
+            <ul class="list-unstyled mb-0">
+                <li class="mb-3 d-flex align-items-center gap-3">
+                    <i class="fab fa-python fa-2x text-warning"></i>
+                    <div>
+                        <strong class="text-light">Python 3.11+ / Django 4.2+</strong>
+                        <div class="text-secondary small">Backend framework, ORM & REST APIs</div>
+                    </div>
+                </li>
+                <li class="mb-3 d-flex align-items-center gap-3">
+                    <i class="fas fa-database fa-2x text-primary"></i>
+                    <div>
+                        <strong class="text-light">SQLite / PostgreSQL Ready</strong>
+                        <div class="text-secondary small">Relational environmental telemetry persistence</div>
+                    </div>
+                </li>
+                <li class="mb-3 d-flex align-items-center gap-3">
+                    <i class="fas fa-square-root-alt fa-2x text-info"></i>
+                    <div>
+                        <strong class="text-light">Pandas & NumPy</strong>
+                        <div class="text-secondary small">Exploratory data analysis & statistical matrices</div>
+                    </div>
+                </li>
+                <li class="mb-3 d-flex align-items-center gap-3">
+                    <i class="fas fa-chart-pie fa-2x text-danger"></i>
+                    <div>
+                        <strong class="text-light">Chart.js 4.4 & Leaflet.js</strong>
+                        <div class="text-secondary small">Interactive dark-mode visualization & geospatial mapping</div>
+                    </div>
+                </li>
+                <li class="d-flex align-items-center gap-3">
+                    <i class="fab fa-bootstrap fa-2x text-purple"></i>
+                    <div>
+                        <strong class="text-light">Bootstrap 5 Glassmorphism</strong>
+                        <div class="text-secondary small">Ultra-modern dark aesthetic UI design system</div>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- REST API Documentation Reference Card -->
+<div class="glass-card p-4 mb-4">
+    <h5 class="fw-bold text-light mb-3">
+        <i class="fas fa-terminal text-success me-2"></i>Programmatic REST API Endpoints
+    </h5>
+    <div class="table-responsive">
+        <table class="table table-dark table-hover table-striped mb-0 align-middle small">
+            <thead>
+                <tr class="text-secondary">
+                    <th>Method</th>
+                    <th>Endpoint Route</th>
+                    <th>Description</th>
+                    <th>Sample Request</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><span class="badge bg-success">GET</span></td>
+                    <td><code>/api/cities/</code></td>
+                    <td>List all registered monitoring stations with latest telemetry</td>
+                    <td><a href="/api/cities/" target="_blank" class="btn btn-sm btn-outline-secondary py-0">Query</a></td>
+                </tr>
+                <tr>
+                    <td><span class="badge bg-success">GET</span></td>
+                    <td><code>/api/weather/</code></td>
+                    <td>Query meteorological observation records (filterable by <code>?city=1</code>)</td>
+                    <td><a href="/api/weather/" target="_blank" class="btn btn-sm btn-outline-secondary py-0">Query</a></td>
+                </tr>
+                <tr>
+                    <td><span class="badge bg-success">GET</span></td>
+                    <td><code>/api/air-quality/</code></td>
+                    <td>Query atmospheric pollution logs (filterable by <code>?city=1</code>)</td>
+                    <td><a href="/api/air-quality/" target="_blank" class="btn btn-sm btn-outline-secondary py-0">Query</a></td>
+                </tr>
+                <tr>
+                    <td><span class="badge bg-success">GET</span></td>
+                    <td><code>/api/alerts/</code></td>
+                    <td>List active and historical environmental warning alerts</td>
+                    <td><a href="/api/alerts/" target="_blank" class="btn btn-sm btn-outline-secondary py-0">Query</a></td>
+                </tr>
+                <tr>
+                    <td><span class="badge bg-success">GET</span></td>
+                    <td><code>/api/forecast/?city=1</code></td>
+                    <td>Retrieve 7-day weather and AQI forecast predictions</td>
+                    <td><a href="/api/forecast/?city=1" target="_blank" class="btn btn-sm btn-outline-secondary py-0">Query</a></td>
+                </tr>
+                <tr>
+                    <td><span class="badge bg-success">GET</span></td>
+                    <td><code>/api/analytics/</code></td>
+                    <td>Calculated Pearson correlation matrix and platform statistics</td>
+                    <td><a href="/api/analytics/" target="_blank" class="btn btn-sm btn-outline-secondary py-0">Query</a></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

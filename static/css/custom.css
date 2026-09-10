@@ -1,0 +1,157 @@
+/* 
+=============================================================================
+ AeroWatch — Weather & Air Quality Environmental Intelligence Platform
+ Custom Glassmorphism Dark Theme Design System
+=============================================================================
+*/
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+    --bg-dark: #0B1120;
+    --card-bg: rgba(30, 41, 59, 0.7);
+    --card-border: rgba(255, 255, 255, 0.08);
+    --primary: #38BDF8;
+    --primary-glow: rgba(56, 189, 248, 0.25);
+    --success: #10B981;
+    --warning: #F59E0B;
+    --danger: #EF4444;
+    --purple: #8B5CF6;
+    --maroon: #881337;
+    --text-main: #F8FAFC;
+    --text-muted: #94A3B8;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: var(--bg-dark);
+    color: var(--text-main);
+    min-height: 100vh;
+}
+
+/* Glassmorphism Cards */
+.glass-card {
+    background: var(--card-bg);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--card-border);
+    border-radius: 14px;
+    padding: 1.4rem;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.glass-card:hover {
+    border-color: rgba(56, 189, 248, 0.3);
+    box-shadow: 0 12px 28px -6px var(--primary-glow);
+}
+
+/* Top Hero Header */
+.hero-header {
+    background: linear-gradient(135deg, #0F172A 0%, #1E1B4B 50%, #0369A1 100%);
+    border: 1px solid rgba(56, 189, 248, 0.25);
+    border-radius: 16px;
+    padding: 1.8rem 2.2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.4);
+}
+
+.hero-title {
+    font-size: 2.1rem;
+    font-weight: 800;
+    background: linear-gradient(90deg, #FFFFFF 0%, #BAE6FD 50%, #38BDF8 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 0.3rem;
+}
+
+/* Sidebar Navigation */
+.sidebar {
+    background: rgba(15, 23, 42, 0.95);
+    border-right: 1px solid var(--card-border);
+    min-height: 100vh;
+    padding: 1.5rem 1rem;
+}
+
+.nav-link {
+    color: var(--text-muted) !important;
+    font-weight: 500;
+    padding: 0.75rem 1rem;
+    border-radius: 10px;
+    margin-bottom: 0.3rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    transition: all 0.2s ease;
+}
+
+.nav-link:hover, .nav-link.active {
+    background: rgba(56, 189, 248, 0.12);
+    color: var(--primary) !important;
+    border-left: 3px solid var(--primary);
+    font-weight: 600;
+}
+
+/* AQI Badges & Dials */
+.aqi-pill {
+    padding: 0.35rem 0.8rem;
+    border-radius: 9999px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+.aqi-good { background: rgba(16, 185, 129, 0.2); color: #34D399; border: 1px solid #10B981; }
+.aqi-moderate { background: rgba(245, 158, 11, 0.2); color: #FBBF24; border: 1px solid #F59E0B; }
+.aqi-orange { background: rgba(249, 115, 22, 0.2); color: #FB923C; border: 1px solid #F97316; }
+.aqi-danger { background: rgba(239, 68, 68, 0.2); color: #F87171; border: 1px solid #EF4444; }
+.aqi-purple { background: rgba(139, 92, 246, 0.2); color: #A78BFA; border: 1px solid #8B5CF6; }
+.aqi-maroon { background: rgba(136, 19, 55, 0.2); color: #FDA4AF; border: 1px solid #BE123C; }
+
+/* KPI Cards */
+.kpi-title {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+    margin-bottom: 0.3rem;
+}
+
+.kpi-value {
+    font-size: 1.85rem;
+    font-weight: 800;
+    color: var(--text-main);
+    line-height: 1.2;
+}
+
+/* Custom Table Styling */
+.table-dark-custom {
+    background: transparent;
+    color: #CBD5E1;
+}
+
+.table-dark-custom th {
+    background: rgba(15, 23, 42, 0.8);
+    color: #94A3B8;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid var(--card-border);
+    padding: 0.85rem 1rem;
+}
+
+.table-dark-custom td {
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    vertical-align: middle;
+}
+
+/* Insight Box */
+.insight-box {
+    background: rgba(15, 23, 42, 0.6);
+    border-left: 4px solid var(--primary);
+    border-radius: 0 10px 10px 0;
+    padding: 1rem 1.2rem;
+    margin-bottom: 0.85rem;
+}

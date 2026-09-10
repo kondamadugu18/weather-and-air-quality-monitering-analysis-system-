@@ -1,0 +1,167 @@
+{% extends 'base.html' %}
+{% block title %}7-Day Weather & Air Quality Forecast — AeroWatch{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+        <h2 class="fw-bold text-gradient mb-1">
+            <i class="fas fa-calendar-alt text-success me-2"></i>7-Day Weather & Air Quality Forecast
+        </h2>
+        <p class="text-secondary small mb-0">Projected meteorological patterns and air pollution index trajectory for {{ selected_city.name }}.</p>
+    </div>
+    <form method="get" class="d-flex gap-2 align-items-center">
+        <select name="city" class="form-select form-select-sm bg-dark text-light border-secondary" onchange="this.form.submit()">
+            {% for c in cities %}
+            <option value="{{ c.id }}" {% if c.id == selected_city.id %}selected{% endif %}>{{ c.name }}, {{ c.country }}</option>
+            {% endfor %}
+        </select>
+    </form>
+</div>
+
+<!-- Forecast Cards Row -->
+<div class="row g-3 mb-4">
+    {% for day in forecast %}
+    <div class="col-lg-3 col-md-4 col-sm-6">
+        <div class="glass-card p-3 h-100 text-center position-relative border-top border-3 {% if forloop.first %}border-primary{% else %}border-secondary{% endif %}">
+            {% if forloop.first %}
+            <span class="position-absolute top-0 end-0 badge bg-primary m-2 small">Today</span>
+            {% endif %}
+            <div class="fw-bold text-light mb-1">{{ day.day_name }}</div>
+            <div class="small text-secondary mb-2">{{ day.date }}</div>
+            
+            <div class="fs-2 my-2 text-info">
+                {% if 'Clear' in day.condition or 'Sun' in day.condition %}
+                <i class="fas fa-sun text-warning"></i>
+                {% elif 'Rain' in day.condition %}
+                <i class="fas fa-cloud-showers-heavy text-primary"></i>
+                {% elif 'Cloud' in day.condition %}
+                <i class="fas fa-cloud text-secondary"></i>
+                {% elif 'Thunder' in day.condition %}
+                <i class="fas fa-bolt text-warning"></i>
+                {% else %}
+                <i class="fas fa-cloud-sun text-info"></i>
+                {% endif %}
+            </div>
+            
+            <div class="fw-semibold text-light small mb-2">{{ day.condition }}</div>
+            
+            <div class="d-flex justify-content-center align-items-center gap-2 mb-2">
+                <span class="fs-4 fw-bold text-light">{{ day.temp_max|floatformat:0 }}°</span>
+                <span class="text-secondary fs-6">/ {{ day.temp_min|floatformat:0 }}°C</span>
+            </div>
+
+            <hr class="border-secondary my-2">
+
+            <!-- AQI Indicator -->
+            <div class="d-flex justify-content-between align-items-center small">
+                <span class="text-secondary">Expected AQI:</span>
+                <span class="badge {% if day.aqi <= 50 %}bg-success{% elif day.aqi <= 100 %}bg-info{% elif day.aqi <= 150 %}bg-warning text-dark{% elif day.aqi <= 200 %}bg-danger{% else %}bg-purple{% endif %}">
+                    {{ day.aqi }}
+                </span>
+            </div>
+            <div class="d-flex justify-content-between align-items-center small mt-1">
+                <span class="text-secondary">Air Quality:</span>
+                <span class="text-light fw-semibold small">{{ day.category }}</span>
+            </div>
+            <div class="d-flex justify-content-between align-items-center small mt-1">
+                <span class="text-secondary">Rain Prob:</span>
+                <span class="text-info">{{ day.rain_prob }}%</span>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Forecast Trajectory Chart -->
+<div class="row g-3 mb-4">
+    <div class="col-lg-12">
+        <div class="glass-card p-4">
+            <h5 class="fw-bold text-light mb-3">
+                <i class="fas fa-chart-area text-info me-2"></i>7-Day Temperature & AQI Forecast Trajectory
+            </h5>
+            <div style="height: 320px;">
+                <canvas id="forecastChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const ctx = document.getElementById('forecastChart');
+        if (ctx) {
+            const labels = [{% for d in forecast %}'{{ d.day_name }} ({{ d.date }})',{% endfor %}];
+            const maxTemps = [{% for d in forecast %}{{ d.temp_max }},{% endfor %}];
+            const minTemps = [{% for d in forecast %}{{ d.temp_min }},{% endfor %}];
+            const aqiVals = [{% for d in forecast %}{{ d.aqi }},{% endfor %}];
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Max Temperature (°C)',
+                            data: maxTemps,
+                            borderColor: '#ef4444',
+                            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                            borderWidth: 2,
+                            tension: 0.35,
+                            yAxisID: 'yTemp'
+                        },
+                        {
+                            label: 'Min Temperature (°C)',
+                            data: minTemps,
+                            borderColor: '#38bdf8',
+                            backgroundColor: 'rgba(56, 189, 248, 0.1)',
+                            borderWidth: 2,
+                            tension: 0.35,
+                            yAxisID: 'yTemp'
+                        },
+                        {
+                            label: 'Forecasted AQI',
+                            data: aqiVals,
+                            borderColor: '#f59e0b',
+                            backgroundColor: 'rgba(245, 158, 11, 0.2)',
+                            borderWidth: 2,
+                            borderDash: [5, 5],
+                            tension: 0.35,
+                            fill: true,
+                            yAxisID: 'yAqi'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: {
+                        legend: { position: 'top', labels: { color: '#cbd5e1' } }
+                    },
+                    scales: {
+                        x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } },
+                        yTemp: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: { display: true, text: 'Temperature (°C)', color: '#38bdf8' },
+                            ticks: { color: '#38bdf8' },
+                            grid: { color: 'rgba(255,255,255,0.05)' }
+                        },
+                        yAqi: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: { display: true, text: 'AQI Level', color: '#f59e0b' },
+                            ticks: { color: '#f59e0b' },
+                            grid: { drawOnChartArea: false }
+                        }
+                    }
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+{% block title %}Data Export & CSV Download — AeroWatch{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+        <h2 class="fw-bold text-gradient mb-1">
+            <i class="fas fa-file-export text-info me-2"></i>Data Export & Research Telemetry Download
+        </h2>
+        <p class="text-secondary small mb-0">Export raw and aggregated meteorological and air quality records in structured CSV format for offline statistical and ML analysis.</p>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <!-- Weather Export Card -->
+    <div class="col-md-6 col-lg-3">
+        <div class="glass-card p-4 h-100 d-flex flex-column justify-content-between text-center border-top border-4 border-info">
+            <div>
+                <div class="fs-1 text-info mb-3">
+                    <i class="fas fa-cloud-sun-rain"></i>
+                </div>
+                <h5 class="fw-bold text-light">Weather Telemetry</h5>
+                <p class="text-secondary small">Temperature, humidity, pressure, wind velocity, precipitation, and sky conditions.</p>
+            </div>
+            <div class="mt-3">
+                <a href="{% url 'export_data_csv' 'weather' %}" class="btn btn-outline-info w-100 py-2">
+                    <i class="fas fa-download me-1"></i>Download Weather CSV
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- AQI Export Card -->
+    <div class="col-md-6 col-lg-3">
+        <div class="glass-card p-4 h-100 d-flex flex-column justify-content-between text-center border-top border-4 border-warning">
+            <div>
+                <div class="fs-1 text-warning mb-3">
+                    <i class="fas fa-smog"></i>
+                </div>
+                <h5 class="fw-bold text-light">Air Quality Telemetry</h5>
+                <p class="text-secondary small">Comprehensive AQI index, PM2.5, PM10, NO₂, SO₂, CO, and Ground Ozone metrics.</p>
+            </div>
+            <div class="mt-3">
+                <a href="{% url 'export_data_csv' 'aqi' %}" class="btn btn-outline-warning w-100 py-2">
+                    <i class="fas fa-download me-1"></i>Download AQI CSV
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Combined Export Card -->
+    <div class="col-md-6 col-lg-3">
+        <div class="glass-card p-4 h-100 d-flex flex-column justify-content-between text-center border-top border-4 border-primary">
+            <div>
+                <div class="fs-1 text-primary mb-3">
+                    <i class="fas fa-layer-group"></i>
+                </div>
+                <h5 class="fw-bold text-light">Synchronized Data</h5>
+                <p class="text-secondary small">Merged multi-variable records aligned across timestamps for correlational research.</p>
+            </div>
+            <div class="mt-3">
+                <a href="{% url 'export_data_csv' 'combined' %}" class="btn btn-outline-primary w-100 py-2">
+                    <i class="fas fa-download me-1"></i>Download Merged CSV
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Master Package Export Card -->
+    <div class="col-md-6 col-lg-3">
+        <div class="glass-card p-4 h-100 d-flex flex-column justify-content-between text-center border-top border-4 border-success">
+            <div>
+                <div class="fs-1 text-success mb-3">
+                    <i class="fas fa-database"></i>
+                </div>
+                <h5 class="fw-bold text-light">Complete Dataset</h5>
+                <p class="text-secondary small">Comprehensive platform dump containing full stations, weather, and air quality logs.</p>
+            </div>
+            <div class="mt-3">
+                <a href="{% url 'export_data_csv' 'all' %}" class="btn btn-success w-100 py-2">
+                    <i class="fas fa-file-archive me-1"></i>Download All CSV
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filtered City Download -->
+<div class="glass-card p-4 mb-4">
+    <h5 class="fw-bold text-light mb-3">
+        <i class="fas fa-filter text-primary me-2"></i>Filter Export by Specific Station
+    </h5>
+    <div class="row g-3">
+        {% for c in cities %}
+        <div class="col-md-4 col-sm-6">
+            <div class="p-3 glass-panel rounded-3 d-flex justify-content-between align-items-center">
+                <div>
+                    <strong class="text-light">{{ c.name }}</strong>
+                    <span class="text-secondary small d-block">{{ c.country }}</span>
+                </div>
+                <div class="btn-group">
+                    <a href="{% url 'export_data_csv' 'weather' %}?city={{ c.id }}" class="btn btn-sm btn-outline-info" title="Download Weather">
+                        <i class="fas fa-cloud-sun"></i>
+                    </a>
+                    <a href="{% url 'export_data_csv' 'aqi' %}?city={{ c.id }}" class="btn btn-sm btn-outline-warning" title="Download AQI">
+                        <i class="fas fa-smog"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

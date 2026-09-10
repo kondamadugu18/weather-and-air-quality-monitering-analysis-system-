@@ -1,0 +1,243 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard | AeroWatch Environmental Intelligence{% endblock %}
+{% block header_title %}Live Weather & AQI Executive Dashboard{% endblock %}
+{% block header_subtitle %}Real-time multi-city observation feed, air quality index dials, and pollutant metrics{% endblock %}
+
+{% block content %}
+<!-- Top KPI Scorecards -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3 col-sm-6">
+        <div class="glass-card">
+            <div class="kpi-title">Average Temperature</div>
+            <div class="kpi-value text-info">{{ kpis.avg_temp }}°C</div>
+            <small class="text-muted">Across {{ cities.count }} Monitored Cities</small>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+        <div class="glass-card">
+            <div class="kpi-title">Network Average AQI</div>
+            <div class="kpi-value text-warning">{{ kpis.avg_aqi }}</div>
+            <small class="text-muted">PM2.5: {{ kpis.avg_pm25 }} µg/m³</small>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+        <div class="glass-card">
+            <div class="kpi-title">Cleanest Air Quality</div>
+            <div class="kpi-value text-success">{{ rankings.cleanest.city|default:"N/A" }}</div>
+            <small class="text-success fw-bold">AQI {{ rankings.cleanest.aqi }} ({{ rankings.cleanest.category }})</small>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+        <div class="glass-card">
+            <div class="kpi-title">Pollution Hotspot</div>
+            <div class="kpi-value text-danger">{{ rankings.most_polluted.city|default:"N/A" }}</div>
+            <small class="text-danger fw-bold">AQI {{ rankings.most_polluted.aqi }} ({{ rankings.most_polluted.category }})</small>
+        </div>
+    </div>
+</div>
+
+<!-- City Focus & Live Dials -->
+{% if selected_city %}
+<div class="row g-4 mb-4">
+    <!-- Selected City Weather Card -->
+    <div class="col-lg-6">
+        <div class="glass-card h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h3 class="fw-bold mb-0 text-info">{{ selected_city.name }}, {{ selected_city.country }}</h3>
+                    <small class="text-muted">Updated: {{ selected_city.latest_weather.recorded_at|date:"M d, Y H:i" }}</small>
+                </div>
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        Switch City
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-dark">
+                        {% for c in cities %}
+                            <li><a class="dropdown-item" href="?city_id={{ c.id }}">{{ c.name }}, {{ c.country }}</a></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+
+            {% with w=selected_city.latest_weather %}
+            {% if w %}
+            <div class="d-flex align-items-center justify-content-between my-3 p-3 rounded-3" style="background: rgba(15, 23, 42, 0.5);">
+                <div>
+                    <div class="display-4 fw-bold text-white">{{ w.temperature }}°C</div>
+                    <div class="text-muted">Feels like {{ w.feels_like }}°C • {{ w.description }}</div>
+                </div>
+                <div class="text-end">
+                    <div class="fs-1">🌤️</div>
+                </div>
+            </div>
+
+            <div class="row g-2 text-center mt-2">
+                <div class="col-4 p-2 rounded-2" style="background: rgba(255,255,255,0.03);">
+                    <small class="text-muted d-block">Humidity</small>
+                    <span class="fw-bold text-info">{{ w.humidity }}%</span>
+                </div>
+                <div class="col-4 p-2 rounded-2" style="background: rgba(255,255,255,0.03);">
+                    <small class="text-muted d-block">Wind Speed</small>
+                    <span class="fw-bold text-info">{{ w.wind_speed }} m/s</span>
+                </div>
+                <div class="col-4 p-2 rounded-2" style="background: rgba(255,255,255,0.03);">
+                    <small class="text-muted d-block">Pressure</small>
+                    <span class="fw-bold text-info">{{ w.pressure }} hPa</span>
+                </div>
+            </div>
+            {% endif %}
+            {% endwith %}
+        </div>
+    </div>
+
+    <!-- Selected City Air Quality Card -->
+    <div class="col-lg-6">
+        <div class="glass-card h-100">
+            {% with a=selected_city.latest_aqi %}
+            {% if a %}
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h4 class="fw-bold mb-0 text-white">Air Quality Index</h4>
+                    <small class="text-muted">Real-time sensor readout</small>
+                </div>
+                <div>
+                    <span class="aqi-pill aqi-{{ a.aqi_color_class }}">
+                        ● {{ a.category }}
+                    </span>
+                </div>
+            </div>
+
+            <div class="d-flex align-items-center justify-content-between my-3 p-3 rounded-3" style="background: rgba(15, 23, 42, 0.5);">
+                <div>
+                    <div class="display-4 fw-bold text-warning">{{ a.aqi }}</div>
+                    <div class="text-muted">AQI Status: {{ a.category }}</div>
+                </div>
+                <div class="text-end">
+                    <small class="text-muted d-block">Health Implication</small>
+                    <span class="badge bg-secondary" style="font-size: 11px;">
+                        {% if a.aqi <= 50 %}Air quality is satisfactory.
+                        {% elif a.aqi <= 100 %}Acceptable; sensitive individuals take caution.
+                        {% else %}Increased likelihood of adverse health effects.
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+
+            <!-- Pollutants Grid -->
+            <div class="row g-2 text-center mt-2">
+                <div class="col-2 p-2 rounded-2" style="background: rgba(255,255,255,0.03);">
+                    <small class="text-muted d-block" style="font-size: 10px;">PM2.5</small>
+                    <strong class="text-white">{{ a.pm25 }}</strong>
+                </div>
+                <div class="col-2 p-2 rounded-2" style="background: rgba(255,255,255,0.03);">
+                    <small class="text-muted d-block" style="font-size: 10px;">PM10</small>
+                    <strong class="text-white">{{ a.pm10 }}</strong>
+                </div>
+                <div class="col-2 p-2 rounded-2" style="background: rgba(255,255,255,0.03);">
+                    <small class="text-muted d-block" style="font-size: 10px;">NO2</small>
+                    <strong class="text-white">{{ a.no2 }}</strong>
+                </div>
+                <div class="col-2 p-2 rounded-2" style="background: rgba(255,255,255,0.03);">
+                    <small class="text-muted d-block" style="font-size: 10px;">SO2</small>
+                    <strong class="text-white">{{ a.so2 }}</strong>
+                </div>
+                <div class="col-2 p-2 rounded-2" style="background: rgba(255,255,255,0.03);">
+                    <small class="text-muted d-block" style="font-size: 10px;">O3</small>
+                    <strong class="text-white">{{ a.o3 }}</strong>
+                </div>
+                <div class="col-2 p-2 rounded-2" style="background: rgba(255,255,255,0.03);">
+                    <small class="text-muted d-block" style="font-size: 10px;">CO</small>
+                    <strong class="text-white">{{ a.co }}</strong>
+                </div>
+            </div>
+            {% endif %}
+            {% endwith %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Monitored Cities Grid & Key Insights -->
+<div class="row g-4">
+    <!-- Monitored Cities Grid -->
+    <div class="col-lg-8">
+        <div class="glass-card">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4 class="fw-bold mb-0 text-white"><i class="fa-solid fa-city me-2 text-info"></i>Monitored Cities Live Feed</h4>
+                <a href="{% url 'city_management' %}" class="btn btn-sm btn-outline-info">Manage All</a>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-dark-custom mb-0">
+                    <thead>
+                        <tr>
+                            <th>City</th>
+                            <th>Temp (°C)</th>
+                            <th>Condition</th>
+                            <th>Humidity</th>
+                            <th>Wind</th>
+                            <th>AQI Index</th>
+                            <th>Category</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for city in cities %}
+                        <tr>
+                            <td>
+                                <a href="?city_id={{ city.id }}" class="text-decoration-none fw-bold text-info">
+                                    {{ city.name }}
+                                </a>
+                                <small class="text-muted">({{ city.country }})</small>
+                            </td>
+                            <td class="fw-bold">{{ city.latest_weather.temperature|default:"--" }}°C</td>
+                            <td>{{ city.latest_weather.description|default:"Clear" }}</td>
+                            <td>{{ city.latest_weather.humidity|default:"--" }}%</td>
+                            <td>{{ city.latest_weather.wind_speed|default:"--" }} m/s</td>
+                            <td>
+                                <strong class="text-white">{{ city.latest_aqi.aqi|default:"--" }}</strong>
+                            </td>
+                            <td>
+                                {% if city.latest_aqi %}
+                                    <span class="aqi-pill aqi-{{ city.latest_aqi.aqi_color_class }}" style="font-size: 11px; padding: 2px 8px;">
+                                        {{ city.latest_aqi.category }}
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Pending</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center text-muted py-4">No cities added yet.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dynamic Insights Callout -->
+    <div class="col-lg-4">
+        <div class="glass-card h-100">
+            <h4 class="fw-bold mb-3 text-white"><i class="fa-solid fa-lightbulb me-2 text-warning"></i>Key Environmental Insights</h4>
+            {% for item in insights %}
+                <div class="insight-box">
+                    <p class="mb-0 text-light" style="font-size: 13px;">{{ item|safe }}</p>
+                </div>
+            {% empty %}
+                <p class="text-muted">Collecting historical observations to generate analytical insights...</p>
+            {% endfor %}
+
+            <div class="mt-4 p-3 rounded-3" style="background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.2);">
+                <div class="fw-bold text-info mb-1" style="font-size: 13px;">🎯 Action Recommendations</div>
+                <ul class="mb-0 ps-3 text-muted" style="font-size: 12px;">
+                    <li>Sensitive cohorts should limit heavy outdoor cardio when AQI > 150.</li>
+                    <li>Utilize air purifiers indoors during stagnant thermal inversion periods.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,296 @@
+{% extends 'base.html' %}
+{% block title %}Air Quality Intelligence — AeroWatch{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+        <h2 class="fw-bold text-gradient mb-1">
+            <i class="fas fa-smog text-warning me-2"></i>Air Quality Monitoring & Pollutants
+        </h2>
+        <p class="text-secondary small mb-0">Live atmospheric pollution metrics, standard AQI categorizations, and health advisories.</p>
+    </div>
+    <div class="d-flex gap-2 align-items-center">
+        <form method="get" class="d-flex gap-2 align-items-center">
+            <select name="city" class="form-select form-select-sm bg-dark text-light border-secondary" onchange="this.form.submit()">
+                {% for c in cities %}
+                <option value="{{ c.id }}" {% if c.id == selected_city.id %}selected{% endif %}>{{ c.name }}, {{ c.country }}</option>
+                {% endfor %}
+            </select>
+        </form>
+        <a href="{% url 'refresh_city_data' selected_city.id %}" class="btn btn-outline-info btn-sm">
+            <i class="fas fa-sync-alt me-1"></i>Refresh
+        </a>
+    </div>
+</div>
+
+{% if aqi_rec %}
+<!-- Main AQI Banner & Key Index Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-lg-5">
+        <div class="glass-card p-4 h-100 d-flex flex-column justify-content-between text-center position-relative overflow-hidden">
+            <div class="position-absolute top-0 end-0 p-3 opacity-10">
+                <i class="fas fa-shield-virus fa-6x"></i>
+            </div>
+            <div>
+                <span class="badge bg-secondary text-uppercase px-3 py-1 mb-2">Selected Station: {{ selected_city.name }}</span>
+                <h6 class="text-secondary text-uppercase tracking-wider small">Air Quality Index (AQI)</h6>
+                <div class="display-2 fw-bold my-2 {% if aqi_rec.aqi <= 50 %}text-success{% elif aqi_rec.aqi <= 100 %}text-info{% elif aqi_rec.aqi <= 150 %}text-warning{% elif aqi_rec.aqi <= 200 %}text-orange{% elif aqi_rec.aqi <= 300 %}text-danger{% else %}text-purple{% endif %}">
+                    {{ aqi_rec.aqi }}
+                </div>
+                <div class="fs-4 fw-semibold mb-2">
+                    <span class="badge px-3 py-2 bg-dark border {% if aqi_rec.aqi <= 50 %}border-success text-success{% elif aqi_rec.aqi <= 100 %}border-info text-info{% elif aqi_rec.aqi <= 150 %}border-warning text-warning{% elif aqi_rec.aqi <= 200 %}border-orange text-orange{% elif aqi_rec.aqi <= 300 %}border-danger text-danger{% else %}border-purple text-purple{% endif %}">
+                        {{ aqi_rec.category }}
+                    </span>
+                </div>
+            </div>
+            <div class="p-3 glass-panel rounded-3 text-start mt-3">
+                <div class="d-flex align-items-center gap-2 mb-1">
+                    <i class="fas fa-heartbeat text-danger"></i>
+                    <strong class="small text-light">Health Recommendation:</strong>
+                </div>
+                <p class="small text-secondary mb-0">
+                    {% if aqi_rec.aqi <= 50 %}
+                    Air quality is satisfactory. Normal outdoor activity is recommended for all groups.
+                    {% elif aqi_rec.aqi <= 100 %}
+                    Air quality is acceptable. Unusually sensitive individuals should consider limiting prolonged outdoor exertion.
+                    {% elif aqi_rec.aqi <= 150 %}
+                    Members of sensitive groups (asthma, elderly, children) may experience health effects. General public not likely affected.
+                    {% elif aqi_rec.aqi <= 200 %}
+                    Everyone may begin to experience health effects. Active children and adults should limit prolonged outdoor exertion.
+                    {% elif aqi_rec.aqi <= 300 %}
+                    Health alert: everyone may experience serious health effects. Avoid prolonged outdoor exertion.
+                    {% else %}
+                    Health warning of emergency conditions. Entire population is likely affected. Stay indoors with air purification.
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 6 Pollutant Breakdown Cards -->
+    <div class="col-lg-7">
+        <div class="row g-3 h-100">
+            <div class="col-sm-6">
+                <div class="glass-card p-3 h-100 border-start border-3 border-danger">
+                    <div class="d-flex justify-content-between align-items-start mb-1">
+                        <span class="text-secondary small fw-semibold">PM2.5 (Fine Particulates)</span>
+                        <span class="badge bg-dark text-danger border border-danger">µg/m³</span>
+                    </div>
+                    <div class="fs-3 fw-bold text-light my-1">{{ aqi_rec.pm25|floatformat:1 }}</div>
+                    <div class="small text-secondary">Inhalable particles ≤ 2.5 µm that penetrate deep into lung tissue.</div>
+                </div>
+            </div>
+            <div class="col-sm-6">
+                <div class="glass-card p-3 h-100 border-start border-3 border-warning">
+                    <div class="d-flex justify-content-between align-items-start mb-1">
+                        <span class="text-secondary small fw-semibold">PM10 (Coarse Dust)</span>
+                        <span class="badge bg-dark text-warning border border-warning">µg/m³</span>
+                    </div>
+                    <div class="fs-3 fw-bold text-light my-1">{{ aqi_rec.pm10|floatformat:1 }}</div>
+                    <div class="small text-secondary">Suspended dust, pollen, and mold spores ≤ 10 µm.</div>
+                </div>
+            </div>
+            <div class="col-sm-6">
+                <div class="glass-card p-3 h-100 border-start border-3 border-info">
+                    <div class="d-flex justify-content-between align-items-start mb-1">
+                        <span class="text-secondary small fw-semibold">NO₂ (Nitrogen Dioxide)</span>
+                        <span class="badge bg-dark text-info border border-info">ppb</span>
+                    </div>
+                    <div class="fs-3 fw-bold text-light my-1">{{ aqi_rec.no2|floatformat:1 }}</div>
+                    <div class="small text-secondary">Combustion byproduct from vehicles, power plants, and industry.</div>
+                </div>
+            </div>
+            <div class="col-sm-6">
+                <div class="glass-card p-3 h-100 border-start border-3 border-primary">
+                    <div class="d-flex justify-content-between align-items-start mb-1">
+                        <span class="text-secondary small fw-semibold">SO₂ (Sulfur Dioxide)</span>
+                        <span class="badge bg-dark text-primary border border-primary">ppb</span>
+                    </div>
+                    <div class="fs-3 fw-bold text-light my-1">{{ aqi_rec.so2|floatformat:1 }}</div>
+                    <div class="small text-secondary">Emissions from fossil fuel combustion and industrial smelting.</div>
+                </div>
+            </div>
+            <div class="col-sm-6">
+                <div class="glass-card p-3 h-100 border-start border-3 border-secondary">
+                    <div class="d-flex justify-content-between align-items-start mb-1">
+                        <span class="text-secondary small fw-semibold">CO (Carbon Monoxide)</span>
+                        <span class="badge bg-dark text-light border border-secondary">ppm</span>
+                    </div>
+                    <div class="fs-3 fw-bold text-light my-1">{{ aqi_rec.co|floatformat:2 }}</div>
+                    <div class="small text-secondary">Colorless, odorless gas from incomplete combustion processes.</div>
+                </div>
+            </div>
+            <div class="col-sm-6">
+                <div class="glass-card p-3 h-100 border-start border-3 border-success">
+                    <div class="d-flex justify-content-between align-items-start mb-1">
+                        <span class="text-secondary small fw-semibold">O₃ (Ground-level Ozone)</span>
+                        <span class="badge bg-dark text-success border border-success">ppb</span>
+                    </div>
+                    <div class="fs-3 fw-bold text-light my-1">{{ aqi_rec.o3|floatformat:1 }}</div>
+                    <div class="small text-secondary">Secondary pollutant formed by sunlight reacting with NOx & VOCs.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="row g-3 mb-4">
+    <div class="col-lg-8">
+        <div class="glass-card p-3 h-100">
+            <h6 class="fw-bold text-light mb-3">
+                <i class="fas fa-chart-line text-warning me-2"></i>Historical AQI Progression & Trendline
+            </h6>
+            <div style="height: 280px;">
+                <canvas id="aqiTrendChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="glass-card p-3 h-100">
+            <h6 class="fw-bold text-light mb-3">
+                <i class="fas fa-chart-pie text-info me-2"></i>Current Pollutant Breakdown
+            </h6>
+            <div style="height: 280px;">
+                <canvas id="pollutantPieChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Table History -->
+<div class="glass-card p-3 mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h6 class="fw-bold text-light mb-0">
+            <i class="fas fa-history text-secondary me-2"></i>Recent Air Quality Measurements ({{ selected_city.name }})
+        </h6>
+        <span class="badge bg-secondary">Total: {{ aqi_history.count }} recordings</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-dark table-hover table-striped mb-0 align-middle">
+            <thead>
+                <tr class="text-secondary small">
+                    <th>Timestamp</th>
+                    <th>AQI</th>
+                    <th>Category</th>
+                    <th>PM2.5 (µg/m³)</th>
+                    <th>PM10 (µg/m³)</th>
+                    <th>NO₂ (ppb)</th>
+                    <th>SO₂ (ppb)</th>
+                    <th>CO (ppm)</th>
+                    <th>O₃ (ppb)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for rec in aqi_history %}
+                <tr>
+                    <td class="small">{{ rec.recorded_at|date:"Y-m-d H:i" }}</td>
+                    <td>
+                        <span class="badge {% if rec.aqi <= 50 %}bg-success{% elif rec.aqi <= 100 %}bg-info{% elif rec.aqi <= 150 %}bg-warning text-dark{% elif rec.aqi <= 200 %}bg-danger{% else %}bg-purple{% endif %}">
+                            {{ rec.aqi }}
+                        </span>
+                    </td>
+                    <td><span class="small fw-semibold">{{ rec.category }}</span></td>
+                    <td>{{ rec.pm25|floatformat:1 }}</td>
+                    <td>{{ rec.pm10|floatformat:1 }}</td>
+                    <td>{{ rec.no2|floatformat:1 }}</td>
+                    <td>{{ rec.so2|floatformat:1 }}</td>
+                    <td>{{ rec.co|floatformat:2 }}</td>
+                    <td>{{ rec.o3|floatformat:1 }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="9" class="text-center text-muted py-3">No AQI history found for {{ selected_city.name }}.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% else %}
+<div class="glass-card p-5 text-center">
+    <i class="fas fa-smog fa-3x text-secondary mb-3"></i>
+    <h5>No Air Quality Data Available</h5>
+    <p class="text-secondary">Click refresh below to fetch or simulate air quality metrics for {{ selected_city.name }}.</p>
+    <a href="{% url 'refresh_city_data' selected_city.id %}" class="btn btn-primary">
+        <i class="fas fa-sync-alt me-1"></i>Fetch Initial Metrics
+    </a>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // Trend Chart
+        const trendCtx = document.getElementById('aqiTrendChart');
+        if (trendCtx) {
+            const labels = [{% for r in aqi_history reversed %}'{{ r.recorded_at|date:"M d, H:i" }}',{% endfor %}];
+            const data = [{% for r in aqi_history reversed %}{{ r.aqi }},{% endfor %}];
+
+            new Chart(trendCtx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'AQI Level',
+                        data: data,
+                        borderColor: '#f59e0b',
+                        backgroundColor: 'rgba(245, 158, 11, 0.15)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.35,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#f59e0b'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8', font: { size: 11 } } },
+                        y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' }, beginAtZero: true }
+                    }
+                }
+            });
+        }
+
+        // Pie Chart
+        const pieCtx = document.getElementById('pollutantPieChart');
+        if (pieCtx) {
+            {% if aqi_rec %}
+            new Chart(pieCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['PM2.5', 'PM10', 'NO₂', 'SO₂', 'O₃'],
+                    datasets: [{
+                        data: [
+                            {{ aqi_rec.pm25|default:0 }},
+                            {{ aqi_rec.pm10|default:0 }},
+                            {{ aqi_rec.no2|default:0 }},
+                            {{ aqi_rec.so2|default:0 }},
+                            {{ aqi_rec.o3|default:0 }}
+                        ],
+                        backgroundColor: ['#ef4444', '#f59e0b', '#3b82f6', '#8b5cf6', '#10b981'],
+                        borderColor: '#1e293b',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { color: '#cbd5e1', font: { size: 11 } } }
+                    },
+                    cutout: '65%'
+                }
+            });
+            {% endif %}
+        }
+    });
+</script>
+{% endblock %}

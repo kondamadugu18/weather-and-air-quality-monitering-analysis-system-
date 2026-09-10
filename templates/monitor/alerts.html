@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+{% block title %}Environmental Alert Feed — AeroWatch{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+        <h2 class="fw-bold text-gradient mb-1">
+            <i class="fas fa-bell text-danger me-2"></i>Environmental Early Warning & Alert Feed
+        </h2>
+        <p class="text-secondary small mb-0">Automated threshold triggers alerting to severe particulate pollution, ozone spikes, and dangerous meteorological phenomena.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <span class="badge bg-danger fs-6 px-3 py-2 d-flex align-items-center gap-1">
+            <i class="fas fa-exclamation-triangle"></i> {{ active_alerts_count }} Active Warnings
+        </span>
+    </div>
+</div>
+
+<!-- Alert Metrics Overview -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="glass-card p-3 border-start border-3 border-danger">
+            <span class="text-secondary small fw-semibold">Active Unresolved Alerts</span>
+            <div class="fs-2 fw-bold text-danger my-1">{{ active_alerts_count }}</div>
+            <div class="small text-secondary">Immediate attention or precautionary measures required</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="glass-card p-3 border-start border-3 border-secondary">
+            <span class="text-secondary small fw-semibold">Total Logged Incidents</span>
+            <div class="fs-2 fw-bold text-light my-1">{{ total_alerts_count }}</div>
+            <div class="small text-secondary">Historical repository of all triggered advisories</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="glass-card p-3 border-start border-3 border-success">
+            <span class="text-secondary small fw-semibold">Incident Resolution Rate</span>
+            <div class="fs-2 fw-bold text-success my-1">
+                {% if total_alerts_count > 0 %}
+                    {% widthratio total_alerts_count|add:"-active_alerts_count" total_alerts_count 100 %}%
+                {% else %}
+                    100%
+                {% endif %}
+            </div>
+            <div class="small text-secondary">AeroWatch autonomous telemetry monitoring</div>
+        </div>
+    </div>
+</div>
+
+<!-- Alerts Feed List -->
+<div class="glass-card p-4 mb-4">
+    <h5 class="fw-bold text-light mb-3">
+        <i class="fas fa-stream text-primary me-2"></i>Live Alert Dispatch Log
+    </h5>
+
+    <div class="table-responsive">
+        <table class="table table-dark table-hover table-striped mb-0 align-middle">
+            <thead>
+                <tr class="text-secondary small">
+                    <th>Severity</th>
+                    <th>Station / City</th>
+                    <th>Alert Type</th>
+                    <th>Advisory Message</th>
+                    <th>Timestamp</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for alert in alerts %}
+                <tr class="{% if alert.is_active %}table-active border-start border-3 {% if alert.severity == 'severe' %}border-danger{% elif alert.severity == 'moderate' %}border-warning{% else %}border-info{% endif %}{% endif %}">
+                    <td>
+                        <span class="badge {% if alert.severity == 'severe' %}bg-danger{% elif alert.severity == 'moderate' %}bg-warning text-dark{% else %}bg-info text-dark{% endif %} text-uppercase">
+                            {{ alert.severity }}
+                        </span>
+                    </td>
+                    <td>
+                        <strong class="text-light">{{ alert.city.name }}</strong>
+                        <span class="text-secondary small d-block">{{ alert.city.country }}</span>
+                    </td>
+                    <td><span class="small fw-semibold text-info">{{ alert.alert_type }}</span></td>
+                    <td class="small text-light">{{ alert.message }}</td>
+                    <td class="small text-secondary">{{ alert.created_at|date:"Y-m-d H:i" }}</td>
+                    <td>
+                        {% if alert.is_active %}
+                        <span class="badge bg-danger animate-pulse">ACTIVE</span>
+                        {% else %}
+                        <span class="badge bg-secondary">RESOLVED</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if alert.is_active %}
+                        <a href="{% url 'resolve_alert' alert.id %}" class="btn btn-sm btn-outline-success py-1 px-2" title="Mark as resolved">
+                            <i class="fas fa-check me-1"></i>Resolve
+                        </a>
+                        {% else %}
+                        <span class="text-muted small"><i class="fas fa-check-double text-success"></i> Handled</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="text-center text-muted py-4">
+                        <i class="fas fa-check-circle fa-2x text-success mb-2 d-block"></i>
+                        No environmental alerts triggered. Atmospheric telemetry is within normal parameters.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

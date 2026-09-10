@@ -1,0 +1,194 @@
+{% extends 'base.html' %}
+{% block title %}Environmental Analytics & EDA — AeroWatch{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+        <h2 class="fw-bold text-gradient mb-1">
+            <i class="fas fa-brain text-info me-2"></i>Environmental Intelligence & Statistical EDA
+        </h2>
+        <p class="text-secondary small mb-0">Multivariate statistical distributions, Pearson correlation matrices, and automated algorithmic insights powered by Pandas & NumPy.</p>
+    </div>
+</div>
+
+<!-- Macro KPI Metrics -->
+<div class="row g-3 mb-4">
+    <div class="col-xl-3 col-sm-6">
+        <div class="glass-card p-3 border-start border-3 border-info h-100">
+            <span class="text-secondary small fw-semibold">Total Telemetry Observations</span>
+            <div class="fs-3 fw-bold text-light my-1">{{ kpis.total_observations }}</div>
+            <div class="small text-secondary">Mean Temp: {{ kpis.avg_temp }}°C &bull; Humidity: {{ kpis.avg_humidity }}%</div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-sm-6">
+        <div class="glass-card p-3 border-start border-3 border-success h-100">
+            <span class="text-secondary small fw-semibold">Network Mean AQI</span>
+            <div class="fs-3 fw-bold text-light my-1">{{ kpis.avg_aqi }}</div>
+            <div class="small text-secondary">Min: {{ kpis.min_aqi }} &bull; Max: {{ kpis.max_aqi }}</div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-sm-6">
+        <div class="glass-card p-3 border-start border-3 border-warning h-100">
+            <span class="text-secondary small fw-semibold">Cleanest Environment</span>
+            <div class="fs-4 fw-bold text-success my-1">{{ rankings.cleanest.city|default:"N/A" }}</div>
+            <div class="small text-secondary">AQI: {{ rankings.cleanest.aqi|default:"--" }} ({{ rankings.cleanest.category|default:"--" }})</div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-sm-6">
+        <div class="glass-card p-3 border-start border-3 border-danger h-100">
+            <span class="text-secondary small fw-semibold">Pollution Hotspot</span>
+            <div class="fs-4 fw-bold text-danger my-1">{{ rankings.most_polluted.city|default:"N/A" }}</div>
+            <div class="small text-secondary">AQI: {{ rankings.most_polluted.aqi|default:"--" }} ({{ rankings.most_polluted.category|default:"--" }})</div>
+        </div>
+    </div>
+</div>
+
+<!-- Dynamic Insights Section -->
+<div class="glass-card p-4 mb-4">
+    <h5 class="fw-bold text-light mb-3">
+        <i class="fas fa-lightbulb text-warning me-2"></i>Automated Environmental Findings & Statistical Insights
+    </h5>
+    <div class="row g-3">
+        {% for ins in insights %}
+        <div class="col-md-6">
+            <div class="glass-panel p-3 h-100 rounded-3 border-start border-3 border-info">
+                <p class="small text-light mb-0">{{ ins }}</p>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12 text-center text-muted py-3">
+            Insufficient telemetry to compile automated findings.
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Pearson Correlation Matrix & City Leaderboard -->
+<div class="row g-3 mb-4">
+    <!-- Heatmap Table -->
+    <div class="col-lg-7">
+        <div class="glass-card p-4 h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold text-light mb-0">
+                    <i class="fas fa-th text-info me-2"></i>Pearson Correlation Matrix
+                </h5>
+                <span class="badge bg-secondary text-light small">r &isin; [-1.0, +1.0]</span>
+            </div>
+            <p class="text-secondary small mb-3">Bivariate Pearson coefficient measuring linear dependence between meteorological forces and pollution levels.</p>
+
+            <div class="table-responsive">
+                <table class="table table-bordered text-center align-middle small table-dark mb-0">
+                    <thead>
+                        <tr class="text-secondary">
+                            <th class="text-start">Metric</th>
+                            {% for var in correlations.variables %}
+                            <th class="text-uppercase" style="font-size: 11px;">{{ var }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody id="corrMatrixBody">
+                        <!-- Populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- City Ranking Leaderboard -->
+    <div class="col-lg-5">
+        <div class="glass-card p-4 h-100">
+            <h5 class="fw-bold text-light mb-3">
+                <i class="fas fa-trophy text-warning me-2"></i>Global AQI Ranking Leaderboard
+            </h5>
+            <div class="table-responsive">
+                <table class="table table-dark table-hover mb-0 align-middle small">
+                    <thead>
+                        <tr class="text-secondary">
+                            <th>Rank</th>
+                            <th>City</th>
+                            <th>AQI</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for rank in rankings.all_cities %}
+                        <tr>
+                            <td class="fw-bold {% if forloop.counter <= 3 %}text-warning{% else %}text-secondary{% endif %}">
+                                #{{ forloop.counter }}
+                            </td>
+                            <td>
+                                <strong class="text-light">{{ rank.city }}</strong>
+                                <span class="text-secondary d-block" style="font-size: 0.75rem;">{{ rank.country }} &bull; {{ rank.temp|floatformat:1 }}°C</span>
+                            </td>
+                            <td>
+                                <span class="badge {% if rank.aqi <= 50 %}bg-success{% elif rank.aqi <= 100 %}bg-info{% elif rank.aqi <= 150 %}bg-warning text-dark{% elif rank.aqi <= 200 %}bg-danger{% else %}bg-purple{% endif %}">
+                                    {{ rank.aqi }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="small text-secondary">{{ rank.category }}</span>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center text-muted">No station telemetry available.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const variables = [{% for v in correlations.variables %}'{{ v }}',{% endfor %}];
+        const matrix = {{ correlations.matrix|default:"[]"|safe }};
+        const tbody = document.getElementById('corrMatrixBody');
+
+        if (tbody && variables.length > 0 && matrix.length > 0) {
+            variables.forEach((rowFeat, rIdx) => {
+                const tr = document.createElement('tr');
+                const th = document.createElement('th');
+                th.className = 'text-start text-secondary';
+                th.style.fontSize = '11px';
+                th.textContent = rowFeat;
+                tr.appendChild(th);
+
+                variables.forEach((colFeat, cIdx) => {
+                    const td = document.createElement('td');
+                    const val = (matrix[rIdx] && matrix[rIdx][cIdx] !== undefined) ? matrix[rIdx][cIdx] : null;
+
+                    if (val !== null) {
+                        const numVal = parseFloat(val);
+                        td.textContent = numVal.toFixed(2);
+                        td.style.fontSize = '11px';
+
+                        if (rIdx === cIdx) {
+                            td.style.backgroundColor = 'rgba(56, 189, 248, 0.4)';
+                            td.className = 'fw-bold text-light';
+                        } else if (numVal > 0.4) {
+                            td.style.backgroundColor = `rgba(239, 68, 68, ${Math.min(0.8, numVal)})`;
+                            td.className = 'text-light fw-semibold';
+                        } else if (numVal > 0) {
+                            td.style.backgroundColor = `rgba(245, 158, 11, ${Math.min(0.4, numVal)})`;
+                        } else if (numVal < -0.4) {
+                            td.style.backgroundColor = `rgba(16, 185, 129, ${Math.min(0.8, Math.abs(numVal))})`;
+                            td.className = 'text-light fw-semibold';
+                        } else {
+                            td.style.backgroundColor = `rgba(59, 130, 246, ${Math.min(0.3, Math.abs(numVal))})`;
+                        }
+                    } else {
+                        td.textContent = '-';
+                    }
+                    tr.appendChild(td);
+                });
+                tbody.appendChild(tr);
+            });
+        }
+    });
+</script>
+{% endblock %}

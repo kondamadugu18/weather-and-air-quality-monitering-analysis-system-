@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+{% block title %}Geospatial Environmental Map — AeroWatch{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+        <h2 class="fw-bold text-gradient mb-1">
+            <i class="fas fa-map-marked-alt text-success me-2"></i>Global Geospatial Environmental Map
+        </h2>
+        <p class="text-secondary small mb-0">Interactive Leaflet.js map visualizing real-time air quality indices and meteorological conditions across monitored worldwide coordinates.</p>
+    </div>
+</div>
+
+<!-- Map Container Card -->
+<div class="glass-card p-3 mb-4">
+    <!-- Map Legend Bar -->
+    <div class="d-flex flex-wrap gap-3 align-items-center justify-content-between p-2 mb-3 glass-panel rounded-3">
+        <div class="d-flex align-items-center gap-2">
+            <i class="fas fa-layer-group text-primary"></i>
+            <span class="small fw-semibold text-light">AQI Scale:</span>
+        </div>
+        <div class="d-flex flex-wrap gap-2 small">
+            <span class="badge bg-success">0-50 Good</span>
+            <span class="badge bg-info">51-100 Moderate</span>
+            <span class="badge bg-warning text-dark">101-150 Sensitive</span>
+            <span class="badge bg-danger">151-200 Unhealthy</span>
+            <span class="badge bg-purple">201-300 Very Unhealthy</span>
+            <span class="badge bg-dark border border-danger text-danger">300+ Hazardous</span>
+        </div>
+    </div>
+
+    <!-- Map Div -->
+    <div id="aerowatchMap" style="height: 520px; border-radius: 12px; z-index: 1;"></div>
+</div>
+
+<!-- City Quick Summary Grid -->
+<div class="row g-3 mb-4">
+    {% for c in cities %}
+    <div class="col-xl-3 col-lg-4 col-sm-6">
+        <div class="glass-card p-3 h-100">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <div>
+                    <h6 class="fw-bold text-light mb-0">{{ c.name }}</h6>
+                    <span class="small text-secondary">{{ c.country }}</span>
+                </div>
+                <a href="{% url 'weather' %}?city={{ c.id }}" class="btn btn-sm btn-outline-info p-1 px-2" title="Inspect">
+                    <i class="fas fa-external-link-alt"></i>
+                </a>
+            </div>
+            <div class="d-flex justify-content-between align-items-center small text-secondary mt-2">
+                <span>Lat/Lon:</span>
+                <span>{{ c.latitude|floatformat:2 }}, {{ c.longitude|floatformat:2 }}</span>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const mapData = {{ map_data_json|safe }};
+
+        // Initialize Leaflet map centered globally
+        const map = L.map('aerowatchMap').setView([20.0, 15.0], 2);
+
+        // CartoDB Dark Matter tile layer
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; <a href="https://carto.com/">CARTO</a> | AeroWatch Telemetry',
+            maxZoom: 19
+        }).addTo(map);
+
+        // Helper to choose color based on AQI
+        function getAqiColor(aqi) {
+            if (aqi <= 50) return '#10b981';
+            if (aqi <= 100) return '#38bdf8';
+            if (aqi <= 150) return '#f59e0b';
+            if (aqi <= 200) return '#ef4444';
+            if (aqi <= 300) return '#8b5cf6';
+            return '#dc2626';
+        }
+
+        // Plot markers for each city
+        const markers = [];
+        mapData.forEach(city => {
+            const color = getAqiColor(city.aqi);
+
+            const circleMarker = L.circleMarker([city.lat, city.lon], {
+                radius: 12,
+                fillColor: color,
+                color: '#ffffff',
+                weight: 2,
+                opacity: 0.9,
+                fillOpacity: 0.75
+            }).addTo(map);
+
+            const popupContent = `
+                <div style="font-family: Inter, sans-serif; min-width: 180px; padding: 4px;">
+                    <h6 style="margin: 0 0 4px 0; font-weight: bold; color: #0f172a;">${city.name}, ${city.country}</h6>
+                    <hr style="margin: 4px 0; border: 0; border-top: 1px solid #e2e8f0;">
+                    <div style="font-size: 13px; margin-bottom: 2px;"><strong>Weather:</strong> ${city.temp.toFixed(1)}°C (${city.condition})</div>
+                    <div style="font-size: 13px; margin-bottom: 2px;"><strong>AQI:</strong> <span style="font-weight: bold; color: ${color};">${city.aqi} (${city.aqi_category})</span></div>
+                    <div style="font-size: 12px; color: #64748b;"><strong>PM2.5:</strong> ${city.pm25.toFixed(1)} µg/m³</div>
+                </div>
+            `;
+
+            circleMarker.bindPopup(popupContent);
+            markers.push(circleMarker);
+        });
+
+        // Fit bounds if markers exist
+        if (markers.length > 0) {
+            const group = new L.featureGroup(markers);
+            map.fitBounds(group.getBounds().pad(0.2));
+        }
+    });
+</script>
+{% endblock %}

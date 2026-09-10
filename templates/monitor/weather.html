@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+
+{% block title %}Weather Monitoring | AeroWatch{% endblock %}
+{% block header_title %}Atmospheric Weather Telemetry{% endblock %}
+{% block header_subtitle %}Detailed meteorological parameters, hourly progression curves, and atmospheric pressure trends{% endblock %}
+
+{% block content %}
+<div class="row g-4 mb-4">
+    <!-- City Selection & Live Metrics -->
+    <div class="col-lg-4">
+        <div class="glass-card mb-4">
+            <h5 class="fw-bold text-white mb-3"><i class="fa-solid fa-location-dot me-2 text-info"></i>Select Monitored City</h5>
+            <div class="list-group list-group-flush rounded-3">
+                {% for c in cities %}
+                <a href="?city_id={{ c.id }}" class="list-group-item list-group-item-action bg-transparent text-light border-secondary border-opacity-25 d-flex justify-content-between align-items-center {% if selected_city.id == c.id %}active bg-info bg-opacity-25{% endif %}">
+                    <span>{{ c.name }}, {{ c.country }}</span>
+                    <strong class="text-info">{{ c.latest_weather.temperature|default:"--" }}°C</strong>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+
+        {% with w=selected_city.latest_weather %}
+        {% if w %}
+        <div class="glass-card">
+            <h5 class="fw-bold text-white mb-3">Live Telemetry Metrics</h5>
+            <div class="mb-3 p-3 rounded-3" style="background: rgba(15,23,42,0.5);">
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">Visibility</span>
+                    <strong class="text-white">{{ w.visibility }} km</strong>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">UV Radiation Index</span>
+                    <strong class="text-warning">{{ w.uv_index }} / 11</strong>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">Atmospheric Pressure</span>
+                    <strong class="text-info">{{ w.pressure }} hPa</strong>
+                </div>
+                <div class="d-flex justify-content-between mb-0">
+                    <span class="text-muted">Wind Direction</span>
+                    <strong class="text-white">{{ w.wind_direction }}°</strong>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- Interactive Weather Charts -->
+    <div class="col-lg-8">
+        <div class="glass-card mb-4">
+            <h5 class="fw-bold text-white mb-3"><i class="fa-solid fa-chart-line me-2 text-info"></i>{{ selected_city.name }} — Temperature & Humidity Progression</h5>
+            <div style="height: 320px;">
+                <canvas id="weatherChart"></canvas>
+            </div>
+        </div>
+
+        <div class="glass-card">
+            <h5 class="fw-bold text-white mb-3"><i class="fa-solid fa-wind me-2 text-info"></i>Wind Velocity & Pressure Trends</h5>
+            <div style="height: 250px;">
+                <canvas id="windChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const rawData = JSON.parse('{{ history_json|escapejs }}');
+    if (rawData && rawData.length > 0) {
+        const labels = rawData.map(d => d.time);
+        const temps = rawData.map(d => d.temp);
+        const humidities = rawData.map(d => d.humidity);
+        const winds = rawData.map(d => d.wind);
+        const pressures = rawData.map(d => d.pressure);
+
+        renderLineChart('weatherChart', labels, [
+            {
+                label: 'Temperature (°C)',
+                data: temps,
+                borderColor: '#38BDF8',
+                backgroundColor: 'rgba(56, 189, 248, 0.1)',
+                tension: 0.3,
+                fill: true
+            },
+            {
+                label: 'Humidity (%)',
+                data: humidities,
+                borderColor: '#10B981',
+                backgroundColor: 'transparent',
+                tension: 0.3,
+                borderDash: [5, 5]
+            }
+        ], 'Value');
+
+        renderLineChart('windChart', labels, [
+            {
+                label: 'Wind Speed (m/s)',
+                data: winds,
+                borderColor: '#F59E0B',
+                backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                tension: 0.3
+            }
+        ], 'Wind Speed (m/s)');
+    }
+});
+</script>
+{% endblock %}

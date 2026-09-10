@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+{% block title %}City Station Management — AeroWatch{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+        <h2 class="fw-bold text-gradient mb-1">
+            <i class="fas fa-city text-primary me-2"></i>Monitored Cities & Station Registry
+        </h2>
+        <p class="text-secondary small mb-0">Register new geographical monitoring coordinates, trigger manual telemetry ingestions, and administer active stations.</p>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <!-- Add City Form Card -->
+    <div class="col-lg-4">
+        <div class="glass-card p-4">
+            <h5 class="fw-bold text-light mb-3">
+                <i class="fas fa-plus-circle text-success me-2"></i>Register New Station
+            </h5>
+            <form method="post">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label class="form-label text-secondary small fw-semibold">City / Station Name *</label>
+                    <input type="text" name="name" class="form-control bg-dark text-light border-secondary" placeholder="e.g. Zurich" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-secondary small fw-semibold">Country Name *</label>
+                    <input type="text" name="country" class="form-control bg-dark text-light border-secondary" placeholder="e.g. Switzerland" required>
+                </div>
+                <div class="row g-2 mb-3">
+                    <div class="col-6">
+                        <label class="form-label text-secondary small fw-semibold">Latitude</label>
+                        <input type="number" step="any" name="latitude" class="form-control bg-dark text-light border-secondary" placeholder="47.3769">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label text-secondary small fw-semibold">Longitude</label>
+                        <input type="number" step="any" name="longitude" class="form-control bg-dark text-light border-secondary" placeholder="8.5417">
+                    </div>
+                </div>
+                <small class="text-secondary d-block mb-3">
+                    <i class="fas fa-info-circle text-info me-1"></i>If coordinates are omitted, AeroWatch will automatically approximate geospatial coordinates.
+                </small>
+                <button type="submit" class="btn btn-primary w-100 py-2">
+                    <i class="fas fa-plus me-1"></i>Register & Initialize Telemetry
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Active Cities List Table -->
+    <div class="col-lg-8">
+        <div class="glass-card p-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold text-light mb-0">
+                    <i class="fas fa-list text-primary me-2"></i>Active Monitored Coordinates
+                </h5>
+                <span class="badge bg-secondary">{{ cities.count }} Active Cities</span>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-dark table-hover table-striped mb-0 align-middle">
+                    <thead>
+                        <tr class="text-secondary small">
+                            <th>City & Country</th>
+                            <th>Coordinates (Lat, Lon)</th>
+                            <th>Latest Weather</th>
+                            <th>Latest AQI</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for city in cities %}
+                        <tr>
+                            <td>
+                                <strong class="text-light">{{ city.name }}</strong>
+                                <span class="text-secondary small d-block">{{ city.country }}</span>
+                            </td>
+                            <td class="small text-secondary">
+                                {{ city.latitude|floatformat:3 }}, {{ city.longitude|floatformat:3 }}
+                            </td>
+                            <td>
+                                {% if city.weather_records.first %}
+                                    <span class="text-info fw-semibold">{{ city.weather_records.first.temperature|floatformat:1 }}°C</span>
+                                    <span class="text-secondary small d-block">{{ city.weather_records.first.condition }}</span>
+                                {% else %}
+                                    <span class="text-muted small">No data</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if city.aqi_records.first %}
+                                    <span class="badge {% if city.aqi_records.first.aqi <= 50 %}bg-success{% elif city.aqi_records.first.aqi <= 100 %}bg-info{% elif city.aqi_records.first.aqi <= 150 %}bg-warning text-dark{% elif city.aqi_records.first.aqi <= 200 %}bg-danger{% else %}bg-purple{% endif %}">
+                                        AQI {{ city.aqi_records.first.aqi }}
+                                    </span>
+                                {% else %}
+                                    <span class="text-muted small">No data</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="d-flex gap-1">
+                                    <a href="{% url 'refresh_city_data' city.id %}" class="btn btn-sm btn-outline-info" title="Refresh Live Data">
+                                        <i class="fas fa-sync-alt"></i>
+                                    </a>
+                                    <form method="post" action="{% url 'delete_city' city.id %}" onsubmit="return confirm('Are you sure you want to remove {{ city.name }} and all associated telemetry records?');" class="d-inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete Station">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center text-muted py-4">No monitoring stations registered yet.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
